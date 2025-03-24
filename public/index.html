@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Sheets Data with MongoDB</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 90%;
+      margin: 20px auto;
+    }
+    table, th, td {
+      border: 1px solid #444;
+    }
+    th, td {
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #eee;
+    }
+    .container {
+      width: 90%;
+      margin: auto;
+      text-align: center;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Google Sheets Data with MongoDB</h1>
+    <div>
+      <button id="fetchSheetData">Fetch Google Sheets Data</button>
+      <button id="saveToDB">Save Data to Database</button>
+      <button id="fetchDBData">Fetch Stored Data</button>
+    </div>
+    <div id="result"></div>
+  </div>
+  <script>
+    const resultDiv = document.getElementById('result');
+
+    // Function to display data in a table.
+    function displayTable(data) {
+      if (!data || !data.length) {
+        resultDiv.innerHTML = '<p>No data available.</p>';
+        return;
+      }
+      let html = '<table>';
+      html += '<thead><tr>';
+      // Check if the data is an array of arrays (raw sheet data) or array of objects (from MongoDB)
+      if (Array.isArray(data[0])) {
+        // Data as array of arrays; assume first row contains headers.
+        data[0].forEach(header => {
+          html += `<th>${header}</th>`;
+        });
+        html += '</tr></thead>';
+        html += '<tbody>';
+        for (let i = 1; i < data.length; i++) {
+          html += '<tr>';
+          data[i].forEach(cell => {
+            html += `<td>${cell}</td>`;
+          });
+          html += '</tr>';
+        }
+        html += '</tbody>';
+      } else {
+        // Data as array of objects.
+        const headers = Object.keys(data[0]);
+        html += '<thead><tr>';
+        headers.forEach(header => {
+          html += `<th>${header}</th>`;
+        });
+        html += '</tr></thead>';
+        html += '<tbody>';
+        data.forEach(row => {
+          html += '<tr>';
+          headers.forEach(header => {
+            html += `<td>${row[header]}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody>';
+      }
+      html += '</table>';
+      resultDiv.innerHTML = html;
+    }
+
+    // Button: Fetch raw Google Sheets data.
+    document.getElementById('fetchSheetData').addEventListener('click', () => {
+      fetch('/api/sheet-data')
+        .then(response => response.json())
+        .then(result => {
+          if (result.data) {
+            displayTable(result.data);
+          } else {
+            resultDiv.innerHTML = 'No data fetched from Google Sheets.';
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          resultDiv.innerHTML = 'Error fetching Google Sheets data.';
+        });
+    });
+
+    // Button: Save data from Google Sheets to MongoDB.
+    document.getElementById('saveToDB').addEventListener('click', () => {
+      fetch('/api/sheet-data/save', { method: 'POST' })
+        .then(response => response.json())
+        .then(result => {
+          resultDiv.innerHTML = `<p>${result.message} (${result.count} rows saved)</p>`;
+        })
+        .catch(err => {
+          console.error(err);
+          resultDiv.innerHTML = 'Error saving data to database.';
+        });
+    });
+
+    // Button: Fetch stored data from MongoDB.
+    document.getElementById('fetchDBData').addEventListener('click', () => {
+      fetch('/api/sheet-data/all')
+        .then(response => response.json())
+        .then(result => {
+          if (result.data) {
+            displayTable(result.data);
+          } else {
+            resultDiv.innerHTML = 'No stored data found.';
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          resultDiv.innerHTML = 'Error fetching stored data.';
+        });
+    });
+  </script>
+</body>
+</html>
