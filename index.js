@@ -4,7 +4,7 @@ const fs = require('fs');
 const readline = require('readline');
 
 // Google Sheet ID and Range (modify these values as needed)
-const SPREADSHEET_ID = '1jnPdM23eEXtY9uPWHwj8fOHAmCVg2I0LCta9kyYPBlo';
+const SPREADSHEET_ID = '1ibD6_zCrzmDk4Wt3wbpVyy6msr2hJjZVzDdw_fPv8pQ';
 const RANGE = 'Dashboard!K9:R36';
 
 /**
